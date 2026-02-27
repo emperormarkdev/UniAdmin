@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Plus, X, Send, Trash2, Pin, Check, AlertCircle } from "lucide-react";
-import { useApp } from "../context/AppContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const PRIORITY = { "High":{ bg:"#fce4ec",color:"#c62828" }, "Normal":{ bg:"#e3f2fd",color:"#1565c0" }, "Low":{ bg:"#f5f5f5",color:"#616161" } };
 const AUDIENCE_COLOR = { "All Students":"#4f46e5", "Faculty Only":"#10b981", "Everyone":"#f59e0b" };
+
+const INITIAL = [
+  { id:1, title:"Second Semester Exam Timetable Released", body:"The timetable for the 2024/2025 second semester examinations has been published. Students are advised to check the portal.", audience:"All Students", priority:"High", date:"15 Jan 2025", pinned:true,  author:"Admin" },
+  { id:2, title:"Faculty Research Symposium — March 2025",  body:"All faculty members are invited to submit abstracts for the annual research symposium taking place 14–16 March 2025.",    audience:"Faculty Only",  priority:"Normal", date:"10 Jan 2025", pinned:false, author:"Admin" },
+  { id:3, title:"Library Extended Hours",                   body:"The university library will be open until midnight every weekday during the examination period starting 20 January.",       audience:"Everyone",      priority:"Low",    date:"8 Jan 2025",  pinned:false, author:"Admin" },
+];
 
 function Toast({ msg, type }) {
   return <div style={{ position:"fixed",top:24,right:24,zIndex:9999,background:"#fff",border:"1px solid #ede9e4",borderRadius:12,padding:"12px 18px",fontSize:13.5,fontWeight:500,display:"flex",alignItems:"center",gap:9,boxShadow:"0 8px 30px rgba(0,0,0,.10)",animation:"fadeUp .25s ease both",color:"#1a1a1a" }}>
@@ -12,7 +18,10 @@ function Toast({ msg, type }) {
 }
 
 export default function Announcements() {
-  const { announcements, setAnnouncements, admin } = useApp();
+  const { user, profile } = useAuth();
+  const authorName = profile?.displayName || user?.displayName || user?.email || "Admin";
+
+  const [announcements, setAnnouncements] = useState(INITIAL);
   const [showForm, setShowForm] = useState(false);
   const [toast,    setToast]    = useState(null);
   const [delId,    setDelId]    = useState(null);
@@ -23,7 +32,7 @@ export default function Announcements() {
   const handleSend = () => {
     if (!form.title.trim()) { fire("Title is required.","error"); return; }
     if (!form.body.trim())  { fire("Message body is required.","error"); return; }
-    const item = { id:Date.now(), ...form, date:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}), pinned:false, author:`${admin.firstName} ${admin.lastName}` };
+    const item = { id:Date.now(), ...form, date:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}), pinned:false, author:authorName };
     setAnnouncements(prev=>[item,...prev]);
     setForm({ title:"", body:"", audience:"All Students", priority:"Normal" });
     setShowForm(false);
@@ -31,8 +40,8 @@ export default function Announcements() {
   };
 
   const togglePin = (id) => {
-    setAnnouncements(prev=>prev.map(a=>a.id===id?{...a,pinned:!a.pinned}:a));
     const item = announcements.find(a=>a.id===id);
+    setAnnouncements(prev=>prev.map(a=>a.id===id?{...a,pinned:!a.pinned}:a));
     fire(item?.pinned?"Unpinned":"Pinned to top");
   };
 
@@ -44,7 +53,7 @@ export default function Announcements() {
 
   const sorted = [...announcements].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
 
-  const selS = { background:"#faf8f5", border:"1.5px solid #ede9e4", borderRadius:10, padding:"10px 13px", fontSize:13.5, outline:"none", fontFamily:"'DM Sans',sans-serif", color:"#1a1a1a", cursor:"pointer", width:"100%" };
+  const selS = { background:"#faf8f5", border:"1.5px solid #ede9e4", borderRadius:10, padding:"10px 13px", fontSize:13.5, outline:"none", fontFamily:"'Inter',sans-serif", color:"#1a1a1a", cursor:"pointer", width:"100%" };
 
   return (
     <div className="page-enter" style={{ display:"flex", flexDirection:"column", gap:20 }}>
@@ -54,7 +63,7 @@ export default function Announcements() {
         <div style={{ position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,.35)",display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
           <div style={{ background:"#fff",borderRadius:20,padding:30,maxWidth:380,width:"100%",boxShadow:"0 24px 60px rgba(0,0,0,.15)" }}>
             <div style={{ width:48,height:48,borderRadius:14,background:"#fce4ec",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14 }}><Trash2 size={22} color="#c62828"/></div>
-            <h3 style={{ fontFamily:"'DM Serif Display',serif",fontSize:20,fontWeight:400,color:"#1a1a1a",marginBottom:8 }}>Delete announcement?</h3>
+            <h3 style={{ fontSize:20,fontWeight:700,color:"#1a1a1a",marginBottom:8 }}>Delete announcement?</h3>
             <p style={{ fontSize:13.5,color:"#7a7169",lineHeight:1.6,marginBottom:22 }}>This cannot be undone.</p>
             <div style={{ display:"flex",gap:11 }}>
               <button className="btn-dark" style={{ background:"#c62828" }} onClick={()=>handleDelete(delId)}>Delete</button>
@@ -66,7 +75,7 @@ export default function Announcements() {
 
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12 }}>
         <div>
-          <h1 style={{ fontFamily:"'DM Serif Display',serif",fontSize:26,fontWeight:600,color:"#1a1a1a" }}>Announcements</h1>
+          <h1 style={{ fontSize:26,fontWeight:700,color:"#1a1a1a",letterSpacing:"-0.5px" }}>Announcements</h1>
           <p style={{ color:"#b0a89e",fontSize:13.5,marginTop:3 }}>Broadcast messages to students, faculty or everyone</p>
         </div>
         <button className="btn-dark" onClick={()=>setShowForm(true)}><Plus size={15}/> New Announcement</button>
@@ -86,7 +95,7 @@ export default function Announcements() {
             <div>
               <label style={{ fontSize:11.5,fontWeight:700,color:"#b0a89e",textTransform:"uppercase",letterSpacing:.6,display:"block",marginBottom:6 }}>Message</label>
               <textarea value={form.body} onChange={e=>setForm(f=>({...f,body:e.target.value}))} rows={4} placeholder="Write your announcement…"
-                style={{ width:"100%",background:"#faf8f5",border:"1.5px solid #ede9e4",borderRadius:10,padding:"10px 14px",fontSize:13.5,outline:"none",fontFamily:"'DM Sans',sans-serif",color:"#1a1a1a",resize:"vertical" }}
+                style={{ width:"100%",background:"#faf8f5",border:"1.5px solid #ede9e4",borderRadius:10,padding:"10px 14px",fontSize:13.5,outline:"none",fontFamily:"'Inter',sans-serif",color:"#1a1a1a",resize:"vertical" }}
                 onFocus={e=>e.target.style.border="1.5px solid #1a1a1a"} onBlur={e=>e.target.style.border="1.5px solid #ede9e4"}/>
             </div>
             <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14 }}>

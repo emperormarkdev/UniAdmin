@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GraduationCap, BookOpen, Users, Library, ArrowUpRight, Search } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useApp } from "../context/AppContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const enrollData = [{m:"Jan",v:1120},{m:"Feb",v:1180},{m:"Mar",v:1240},{m:"Apr",v:1195},{m:"May",v:1320},{m:"Jun",v:1280},{m:"Jul",v:1100},{m:"Aug",v:1380},{m:"Sep",v:1450},{m:"Oct",v:1510},{m:"Nov",v:1490},{m:"Dec",v:1560}];
 const gpaData    = [{d:"CS",v:3.6},{d:"EEE",v:3.2},{d:"Med",v:3.8},{d:"Law",v:3.1},{d:"Bus",v:3.4},{d:"Arc",v:3.3}];
@@ -19,39 +19,39 @@ const CT = ({ active, payload, label }) => {
 };
 
 const QUICK_LINKS = [
-  { label:"Student Records", page:"students" },
-  { label:"Course Catalog",  page:"courses"  },
-  { label:"Faculty List",    page:"faculty"  },
-  { label:"Library",         page:"library"  },
-  { label:"Reports",         page:"reports"  },
+  { label:"Student Records", page:"students"      },
+  { label:"Course Catalog",  page:"courses"       },
+  { label:"Faculty List",    page:"faculty"       },
+  { label:"Library",         page:"library"       },
+  { label:"Reports",         page:"reports"       },
   { label:"Announcements",   page:"announcements" },
 ];
 
 export default function Dashboard({ onNavigate }) {
-  const { admin, students, books } = useApp();
-  const [search, setSearch] = useState("");
+  const { user, profile } = useAuth();
+  const firstName = profile?.displayName?.split(" ")[0] || user?.displayName?.split(" ")[0] || "Admin";
 
-  const inProgress = students.filter(s => s.status === "In Progress").length;
+  const [search, setSearch] = useState("");
 
   const filtered = search.trim()
     ? QUICK_LINKS.filter(l => l.label.toLowerCase().includes(search.toLowerCase()))
     : [];
 
   const STATS = [
-    { label:"Total Students",  value:students.length, sub:`${inProgress} active`, Icon:GraduationCap, color:"#1a1a1a" },
-    { label:"Active Courses",  value:24,              sub:"8 departments",         Icon:BookOpen,       color:"#6b63d4" },
-    { label:"Faculty Members", value:32,              sub:"6 departments",         Icon:Users,          color:"#d46363" },
-    { label:"Library Books",   value:books.length,    sub:"open access",           Icon:Library,        color:"#63a4d4" },
+    { label:"Total Students",  value:12,  sub:"6 active",      Icon:GraduationCap, color:"#1a1a1a" },
+    { label:"Active Courses",  value:24,  sub:"8 departments", Icon:BookOpen,      color:"#6b63d4" },
+    { label:"Faculty Members", value:32,  sub:"6 departments", Icon:Users,         color:"#d46363" },
+    { label:"Library Books",   value:50,  sub:"open access",   Icon:Library,       color:"#63a4d4" },
   ];
 
   return (
     <div className="page-enter" style={{ display:"flex", flexDirection:"column", gap:24 }}>
 
-      {/* Header row */}
+      {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16, flexWrap:"wrap" }}>
         <div>
-          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:26, fontWeight:700, color:"#1a1a1a", letterSpacing:"-0.5px" }}>
-            Good morning, {admin.firstName} 👋
+          <h1 style={{ fontSize:26, fontWeight:700, color:"#1a1a1a", letterSpacing:"-0.5px" }}>
+            Good morning, {firstName} 👋
           </h1>
           <p style={{ color:"#b0a89e", fontSize:14, marginTop:4 }}>Here's what's happening at your institution today.</p>
         </div>
@@ -60,7 +60,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Search bar */}
+      {/* Search */}
       <div style={{ position:"relative", maxWidth:520 }}>
         <Search size={16} style={{ position:"absolute", left:13, top:"50%", transform:"translateY(-50%)", color:"#b0a89e", pointerEvents:"none" }}/>
         <input
@@ -70,15 +70,13 @@ export default function Dashboard({ onNavigate }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        {/* Quick link dropdown */}
         {filtered.length > 0 && (
           <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, right:0, background:"#fff", border:"1px solid #ede9e4", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,.1)", zIndex:100, overflow:"hidden" }}>
             {filtered.map(l => (
               <button key={l.page} onClick={() => { onNavigate?.(l.page); setSearch(""); }}
-                style={{ width:"100%", padding:"10px 16px", background:"none", border:"none", cursor:"pointer", textAlign:"left", fontSize:13.5, color:"#1a1a1a", fontFamily:"'Inter',sans-serif", display:"flex", alignItems:"center", gap:8 }}
+                style={{ width:"100%", padding:"10px 16px", background:"none", border:"none", cursor:"pointer", textAlign:"left", fontSize:13.5, color:"#1a1a1a", display:"flex", alignItems:"center", gap:8 }}
                 onMouseEnter={e => e.currentTarget.style.background="#faf8f5"}
-                onMouseLeave={e => e.currentTarget.style.background="none"}
-              >
+                onMouseLeave={e => e.currentTarget.style.background="none"}>
                 <Search size={13} color="#b0a89e"/> {l.label}
               </button>
             ))}
@@ -128,17 +126,14 @@ export default function Dashboard({ onNavigate }) {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-
         <div className="panel" style={{ padding:22 }}>
           <p style={{ fontWeight:600, fontSize:15, color:"#1a1a1a", marginBottom:18 }}>Gender Split</p>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie data={genderData} cx="50%" cy="50%" outerRadius={65} innerRadius={38} dataKey="value" paddingAngle={3}>
-                <Cell fill="#1a1a1a"/>
-                <Cell fill="#e4d0d8"/>
+                <Cell fill="#1a1a1a"/><Cell fill="#e4d0d8"/>
               </Pie>
-              <Tooltip/>
-              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
+              <Tooltip/><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -160,7 +155,6 @@ export default function Dashboard({ onNavigate }) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
         <div className="panel" style={{ padding:22 }}>
           <p style={{ fontWeight:600, fontSize:15, color:"#1a1a1a", marginBottom:18 }}>Enrollment Status</p>
           <ResponsiveContainer width="100%" height={170}>
@@ -168,8 +162,7 @@ export default function Dashboard({ onNavigate }) {
               <Pie data={statusData} cx="50%" cy="50%" outerRadius={65} innerRadius={38} dataKey="value" paddingAngle={3}>
                 {["#1a1a1a","#f9e8d8","#e4d0d8","#d4e0e4"].map((c,i)=><Cell key={i} fill={c}/>)}
               </Pie>
-              <Tooltip/>
-              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
+              <Tooltip/><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
             </PieChart>
           </ResponsiveContainer>
         </div>
