@@ -25,7 +25,7 @@ function LoadingScreen() {
     }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ width:24, height:24, border:"2.5px solid #e2ddd8", borderTopColor:"#1a1a1a", borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
-      <p style={{ fontSize:13.5, color:"#b0a89e", fontWeight:500 }}>Loading UniAdmin…</p>
+      <p style={{ fontSize:13.5, color:"#b0a89e", fontWeight:500 }}>UNIADMIN...</p>
     </div>
   );
 }
