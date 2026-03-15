@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth }       from "./context/AuthContext.jsx";
+import { Analytics }     from "@vercel/analytics/react";
 import GlobalStyles      from "./components/GlobalStyles.jsx";
 import Sidebar           from "./components/Sidebar.jsx";
 import SignIn            from "./pages/SignIn.jsx";
@@ -102,6 +103,7 @@ export default function App() {
           </div>
         </main>
       </div>
+      <Analytics />
     </>
   );
 }
